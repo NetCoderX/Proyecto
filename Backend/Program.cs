@@ -5,10 +5,15 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Connection string: priorizar DATABASE_URL (Railway) o ConnectionStrings__DefaultConnection
+var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(connectionString))
+    throw new InvalidOperationException("No hay cadena de conexión configurada. Añade DATABASE_URL o ConnectionStrings__DefaultConnection.");
+
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 
 // CORS para permitir el frontend (local y producción)
 var corsOrigins = new List<string> { "http://localhost:5173", "http://localhost:3000" };
