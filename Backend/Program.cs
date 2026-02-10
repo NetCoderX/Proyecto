@@ -45,7 +45,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // CORS para permitir el frontend (local y producción)
 var corsOrigins = new List<string> { "http://localhost:5173", "http://localhost:3000", "https://hernan.up.railway.app" };
-var extraOrigins = builder.Configuration["CORS__AllowedOrigins"];
+var extraOrigins = builder.Configuration["CORS_AllowedOrigins"];
 if (!string.IsNullOrEmpty(extraOrigins))
     corsOrigins.AddRange(extraOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries));
 builder.Services.AddCors(options =>
