@@ -7,7 +7,11 @@ type WeatherForecast = {
   summary?: string | null
 }
 
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5293'
+const API_BASE =
+  import.meta.env.VITE_API_URL ??
+  (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')
+    ? 'https://optimistic-benevolence-production-ce0f.up.railway.app'
+    : 'http://localhost:5293')
 
 export default function App() {
   const [data, setData] = useState<WeatherForecast[]>([])
