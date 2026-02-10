@@ -7,13 +7,13 @@ type WeatherForecast = {
   summary?: string | null
 }
 
-const API_BASE = 'http://localhost:5293'
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5293'
 
 export default function App() {
   const [data, setData] = useState<WeatherForecast[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [loggedIn, setLoggedIn] = useState(true)
+  const [loggedIn, setLoggedIn] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [currentSection, setCurrentSection] = useState<'usuario' | 'temperatura'>('temperatura')

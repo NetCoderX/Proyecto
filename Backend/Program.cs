@@ -10,11 +10,15 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// CORS para permitir el frontend (Vite dev y Docker)
+// CORS para permitir el frontend (local y producción)
+var corsOrigins = new List<string> { "http://localhost:5173", "http://localhost:3000" };
+var extraOrigins = builder.Configuration["CORS__AllowedOrigins"];
+if (!string.IsNullOrEmpty(extraOrigins))
+    corsOrigins.AddRange(extraOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries));
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+        policy.WithOrigins(corsOrigins.ToArray())
               .AllowAnyHeader()
               .AllowAnyMethod());
 });
