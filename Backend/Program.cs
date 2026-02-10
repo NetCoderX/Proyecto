@@ -44,7 +44,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // CORS para permitir el frontend (local y producción)
-var corsOrigins = new List<string> { "http://localhost:5173", "http://localhost:3000" };
+var corsOrigins = new List<string> { "http://localhost:5173", "http://localhost:3000", "https://hernan.up.railway.app" };
 var extraOrigins = builder.Configuration["CORS__AllowedOrigins"];
 if (!string.IsNullOrEmpty(extraOrigins))
     corsOrigins.AddRange(extraOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries));
