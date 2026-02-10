@@ -16,6 +16,17 @@ export default function App() {
   const [loggedIn, setLoggedIn] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [currentSection, setCurrentSection] = useState<'usuario' | 'temperatura'>('temperatura')
+  const [showRegisterModal, setShowRegisterModal] = useState(false)
+  const [registerNombre, setRegisterNombre] = useState('')
+  const [registerApellido, setRegisterApellido] = useState('')
+  const [registerEmail, setRegisterEmail] = useState('')
+  const [registerPassword, setRegisterPassword] = useState('')
+  const [registerPais, setRegisterPais] = useState('')
+  const [registerLoading, setRegisterLoading] = useState(false)
+  const [registerError, setRegisterError] = useState<string | null>(null)
+  const [loginError, setLoginError] = useState<string | null>(null)
+  const [loginLoading, setLoginLoading] = useState(false)
 
   useEffect(() => {
     if (!loggedIn) return
@@ -82,10 +93,41 @@ export default function App() {
           <p style={{ margin: '0 0 20px', color: '#475569' }}>
             Ingresa tu email y contraseña para continuar.
           </p>
+          {loginError && (
+            <div
+              style={{
+                background: '#fee2e2',
+                color: '#991b1b',
+                padding: 12,
+                borderRadius: 10,
+                marginBottom: 16,
+              }}
+            >
+              {loginError}
+            </div>
+          )}
           <form
-            onSubmit={(event) => {
+            onSubmit={async (event) => {
               event.preventDefault()
-              setLoggedIn(true)
+              setLoginError(null)
+              setLoginLoading(true)
+              try {
+                const res = await fetch(`${API_BASE}/api/usuarios/login`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ Email: email, Password: password }),
+                })
+                if (!res.ok) {
+                  setLoginError('Tu usuario no existe')
+                  setLoginLoading(false)
+                  return
+                }
+                setLoggedIn(true)
+              } catch {
+                setLoginError('Error de conexión')
+              } finally {
+                setLoginLoading(false)
+              }
             }}
             style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
           >
@@ -123,8 +165,24 @@ export default function App() {
             </label>
             <button
               type="submit"
+              disabled={loginLoading}
               style={{
                 marginTop: 8,
+                padding: '10px 12px',
+                borderRadius: 10,
+                border: 'none',
+                background: loginLoading ? '#a5b4fc' : '#4f46e5',
+                color: 'white',
+                fontWeight: 600,
+                cursor: loginLoading ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {loginLoading ? 'Verificando...' : 'Loguearse'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowRegisterModal(true)}
+              style={{
                 padding: '10px 12px',
                 borderRadius: 10,
                 border: 'none',
@@ -134,10 +192,186 @@ export default function App() {
                 cursor: 'pointer',
               }}
             >
-              Loguearse
+              Registrarse
             </button>
           </form>
         </div>
+
+        {showRegisterModal && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(15, 23, 42, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 24,
+              boxSizing: 'border-box',
+              zIndex: 1000,
+            }}
+            onClick={() => setShowRegisterModal(false)}
+          >
+            <div
+              style={{
+                width: '100%',
+                maxWidth: 420,
+                background: 'white',
+                borderRadius: 16,
+                padding: 24,
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 12px 30px rgba(15, 23, 42, 0.08)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 style={{ margin: '0 0 8px' }}>Registrarse</h2>
+              <p style={{ margin: '0 0 20px', color: '#475569' }}>
+                Completa tus datos para crear una cuenta.
+              </p>
+              {registerError && (
+                <div
+                  style={{
+                    background: '#fee2e2',
+                    color: '#991b1b',
+                    padding: 12,
+                    borderRadius: 10,
+                    marginBottom: 16,
+                  }}
+                >
+                  {registerError}
+                </div>
+              )}
+              <form
+                onSubmit={async (event) => {
+                  event.preventDefault()
+                  setRegisterError(null)
+                  setRegisterLoading(true)
+                  try {
+                    const res = await fetch(`${API_BASE}/api/usuarios/registrar`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        Nombre: registerNombre,
+                        Apellido: registerApellido,
+                        Email: registerEmail,
+                        Password: registerPassword,
+                        Pais: registerPais,
+                      }),
+                    })
+                    const data = await res.json().catch(() => ({}))
+                    if (!res.ok) {
+                      setRegisterError(data.message ?? `Error ${res.status}`)
+                      return
+                    }
+                    setShowRegisterModal(false)
+                    setRegisterNombre('')
+                    setRegisterApellido('')
+                    setRegisterEmail('')
+                    setRegisterPassword('')
+                    setRegisterPais('')
+                  } catch (err) {
+                    setRegisterError(err instanceof Error ? err.message : 'Error de conexión')
+                  } finally {
+                    setRegisterLoading(false)
+                  }
+                }}
+                style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
+              >
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ fontSize: 12, color: '#64748b' }}>Nombre</span>
+                  <input
+                    type="text"
+                    required
+                    value={registerNombre}
+                    onChange={(e) => setRegisterNombre(e.target.value)}
+                    style={{
+                      padding: '10px 12px',
+                      borderRadius: 10,
+                      border: '1px solid #e2e8f0',
+                      fontSize: 14,
+                    }}
+                  />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ fontSize: 12, color: '#64748b' }}>Apellido</span>
+                  <input
+                    type="text"
+                    required
+                    value={registerApellido}
+                    onChange={(e) => setRegisterApellido(e.target.value)}
+                    style={{
+                      padding: '10px 12px',
+                      borderRadius: 10,
+                      border: '1px solid #e2e8f0',
+                      fontSize: 14,
+                    }}
+                  />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ fontSize: 12, color: '#64748b' }}>Email</span>
+                  <input
+                    type="email"
+                    required
+                    value={registerEmail}
+                    onChange={(e) => setRegisterEmail(e.target.value)}
+                    style={{
+                      padding: '10px 12px',
+                      borderRadius: 10,
+                      border: '1px solid #e2e8f0',
+                      fontSize: 14,
+                    }}
+                  />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ fontSize: 12, color: '#64748b' }}>Contraseña</span>
+                  <input
+                    type="password"
+                    required
+                    value={registerPassword}
+                    onChange={(e) => setRegisterPassword(e.target.value)}
+                    style={{
+                      padding: '10px 12px',
+                      borderRadius: 10,
+                      border: '1px solid #e2e8f0',
+                      fontSize: 14,
+                    }}
+                  />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ fontSize: 12, color: '#64748b' }}>País</span>
+                  <input
+                    type="text"
+                    required
+                    value={registerPais}
+                    onChange={(e) => setRegisterPais(e.target.value)}
+                    style={{
+                      padding: '10px 12px',
+                      borderRadius: 10,
+                      border: '1px solid #e2e8f0',
+                      fontSize: 14,
+                    }}
+                  />
+                </label>
+                <button
+                  type="submit"
+                  disabled={registerLoading}
+                  style={{
+                    marginTop: 8,
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    border: 'none',
+                    background: registerLoading ? '#a5b4fc' : '#4f46e5',
+                    color: 'white',
+                    fontWeight: 600,
+                    cursor: registerLoading ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {registerLoading ? 'Creando cuenta...' : 'Crear cuenta'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -187,20 +421,27 @@ export default function App() {
             Menu
           </div>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {['Usuario', 'Temperatura Actual', 'Login'].map((label) => (
-              <div
-                key={label}
+            {[
+              { id: 'usuario' as const, label: 'Usuario' },
+              { id: 'temperatura' as const, label: 'Temperatura Actual' },
+            ].map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setCurrentSection(id)}
                 style={{
                   padding: '10px 12px',
                   borderRadius: 10,
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
+                  background: currentSection === id ? '#eef2ff' : '#f8fafc',
+                  border: `1px solid ${currentSection === id ? '#4f46e5' : '#e2e8f0'}`,
                   fontWeight: 600,
-                  color: '#0f172a',
+                  color: currentSection === id ? '#4f46e5' : '#0f172a',
+                  cursor: 'pointer',
+                  textAlign: 'left',
                 }}
               >
                 {label}
-              </div>
+              </button>
             ))}
             <button
               type="button"
@@ -222,28 +463,123 @@ export default function App() {
         </aside>
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <header style={{ marginBottom: 24 }}>
-            <p
+          {currentSection === 'usuario' ? (
+            <section
               style={{
-                textTransform: 'uppercase',
-                letterSpacing: '0.18em',
-                fontSize: 12,
-                color: '#4f46e5',
-                margin: 0,
-                fontWeight: 700,
+                background: 'white',
+                borderRadius: 16,
+                padding: 24,
+                boxShadow: '0 12px 30px rgba(15, 23, 42, 0.08)',
+                border: '1px solid #e2e8f0',
               }}
             >
-              Weather API
-            </p>
-            <h1 style={{ margin: '8px 0 4px', fontSize: 36 }}>
-              Pronostico semanal
-            </h1>
-            <p style={{ margin: 0, color: '#475569' }}>
-              Consumido desde la Web API de .NET.
-            </p>
-          </header>
+              <header style={{ marginBottom: 24 }}>
+                <p
+                  style={{
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.18em',
+                    fontSize: 12,
+                    color: '#4f46e5',
+                    margin: 0,
+                    fontWeight: 700,
+                  }}
+                >
+                  Mi cuenta
+                </p>
+                <h1 style={{ margin: '8px 0 4px', fontSize: 36 }}>
+                  Datos del usuario
+                </h1>
+                <p style={{ margin: 0, color: '#475569' }}>
+                  Información de la sesión actual.
+                </p>
+              </header>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 20,
+                  maxWidth: 480,
+                }}
+              >
+                <div
+                  style={{
+                    background: '#f8fafc',
+                    padding: 20,
+                    borderRadius: 12,
+                    border: '1px solid #e2e8f0',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: '#64748b',
+                      marginBottom: 6,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                    }}
+                  >
+                    Email
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 600 }}>
+                    {email || '(No ingresado)'}
+                  </div>
+                </div>
+                <div
+                  style={{
+                    background: '#f8fafc',
+                    padding: 20,
+                    borderRadius: 12,
+                    border: '1px solid #e2e8f0',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: '#64748b',
+                      marginBottom: 6,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                    }}
+                  >
+                    Contraseña
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 600,
+                      fontFamily: 'monospace',
+                      letterSpacing: 4,
+                    }}
+                  >
+                    {password ? '••••••••••' : '(No ingresada)'}
+                  </div>
+                </div>
+              </div>
+            </section>
+          ) : (
+            <>
+              <header style={{ marginBottom: 24 }}>
+                <p
+                  style={{
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.18em',
+                    fontSize: 12,
+                    color: '#4f46e5',
+                    margin: 0,
+                    fontWeight: 700,
+                  }}
+                >
+                  Weather API
+                </p>
+                <h1 style={{ margin: '8px 0 4px', fontSize: 36 }}>
+                  Pronostico semanal
+                </h1>
+                <p style={{ margin: 0, color: '#475569' }}>
+                  Consumido desde la Web API de .NET.
+                </p>
+              </header>
 
-          <section
+              <section
             style={{
               background: 'white',
               borderRadius: 16,
@@ -363,6 +699,8 @@ export default function App() {
               </>
             )}
           </section>
+            </>
+          )}
         </div>
       </div>
     </div>
