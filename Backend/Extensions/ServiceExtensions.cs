@@ -1,5 +1,7 @@
 using Backend.Data;
+using Backend.Endpoints;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Scalar.AspNetCore;
 
 namespace Backend.Extensions;
@@ -15,6 +17,7 @@ public static class ServiceExtensions
         services.AddOpenApi();
         services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
         services.AddCors(ConfigureCors(configuration));
+        services.AddHttpClient();
 
         return services;
     }

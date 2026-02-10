@@ -32,8 +32,8 @@ services:
 
   backend:
     build:
-      context: .
-      dockerfile: Backend/Dockerfile
+      context: ./Backend
+      dockerfile: Dockerfile
     container_name: proyecto_backend
     environment:
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=proyecto_db;Username=proyecto;Password=proyecto123"
@@ -46,8 +46,8 @@ services:
 
   frontend:
     build:
-      context: .
-      dockerfile: Frontend/Dockerfile
+      context: ./Frontend
+      dockerfile: Dockerfile
     container_name: proyecto_frontend
     ports:
       - "3000:80"
