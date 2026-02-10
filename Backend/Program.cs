@@ -21,8 +21,15 @@ static string BuildConnectionString()
     var url = (Environment.GetEnvironmentVariable("DATABASE_URL") ?? "").Trim();
     if (!string.IsNullOrEmpty(url))
     {
-        if (url.StartsWith("postgres://")) url = "postgresql://" + url[11..];
-        return url;
+        if (url.StartsWith("postgres://")) url = "postgresql://" + url["postgres://".Length..];
+        if (url.StartsWith("postgresql://") && Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri != null)
+        {
+            var userInfo = uri.UserInfo.Split(':', 2);
+            var user = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : "";
+            var pass = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+            var db = uri.AbsolutePath.TrimStart('/');
+            return $"Host={uri.Host};Port={uri.Port};Database={db};Username={user};Password={pass};SSL Mode=Require;Trust Server Certificate=true";
+        }
     }
     return null!;
 }
