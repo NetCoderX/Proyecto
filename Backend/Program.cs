@@ -5,11 +5,32 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Connection string: priorizar DATABASE_URL (Railway) o ConnectionStrings__DefaultConnection
-var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
+// Connection string: Railway inyecta PGHOST/PGPORT/etc. o DATABASE_URL
+static string BuildConnectionString()
+{
+    var pgHost = Environment.GetEnvironmentVariable("PGHOST");
+    if (!string.IsNullOrEmpty(pgHost))
+    {
+        var port = Environment.GetEnvironmentVariable("PGPORT") ?? "5432";
+        var user = Environment.GetEnvironmentVariable("PGUSER") ?? Environment.GetEnvironmentVariable("POSTGRES_USER");
+        var pass = Environment.GetEnvironmentVariable("PGPASSWORD") ?? Environment.GetEnvironmentVariable("POSTGRES_PASSWORD");
+        var db = Environment.GetEnvironmentVariable("PGDATABASE") ?? Environment.GetEnvironmentVariable("POSTGRES_DB") ?? "railway";
+        if (!string.IsNullOrEmpty(user) && !string.IsNullOrEmpty(pass))
+            return $"Host={pgHost};Port={port};Database={db};Username={user};Password={pass};SSL Mode=Require;Trust Server Certificate=true";
+    }
+    var url = (Environment.GetEnvironmentVariable("DATABASE_URL") ?? "").Trim();
+    if (!string.IsNullOrEmpty(url))
+    {
+        if (url.StartsWith("postgres://")) url = "postgresql://" + url[11..];
+        return url;
+    }
+    return null!;
+}
+
+var connectionString = BuildConnectionString()
     ?? builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrEmpty(connectionString))
-    throw new InvalidOperationException("No hay cadena de conexión configurada. Añade DATABASE_URL o ConnectionStrings__DefaultConnection.");
+    throw new InvalidOperationException("No hay cadena de conexión. Añade referencia a Postgres en Railway (Variables).");
 
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(options =>
