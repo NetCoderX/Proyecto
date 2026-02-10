@@ -73,7 +73,8 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-app.UseHttpsRedirection();
+// No usar HttpsRedirection cuando está detrás de proxy (Railway)
+// app.UseHttpsRedirection();
 
 // Habilitar CORS para el frontend
 app.UseCors("AllowFrontend");
